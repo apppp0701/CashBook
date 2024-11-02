@@ -3,13 +3,53 @@ from tkinter import messagebox, font
 from modules.record import add_record, load_records
 from modules.view import get_recent_records
 from modules.statistics import calculate_statistics
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import matplotlib as mpl
+
+mpl.rcParams['font.sans-serif'] = ['SimHei']  # 设置中文字体为黑体
+mpl.rcParams['axes.unicode_minus'] = False
+class LoginWindow:
+    def __init__(self):
+        self.login_root = tk.Tk()
+        self.login_root.title("记账本登录")
+        self.login_root.geometry("300x150")
+        self.login_root.configure(bg='#f0f8ff')
+
+        # 设置字体
+        label_font = font.Font(family='Arial', size=12)
+
+        tk.Label(self.login_root, text="用户名:", bg='#f0f8ff', font=label_font).grid(row=0, column=0, padx=5, pady=5)
+        self.username_entry = tk.Entry(self.login_root, width=20, font=label_font)
+        self.username_entry.grid(row=0, column=1, padx=5, pady=5)
+
+        tk.Label(self.login_root, text="密码:", bg='#f0f8ff', font=label_font).grid(row=1, column=0, padx=5, pady=5)
+        self.password_entry = tk.Entry(self.login_root, width=20, show='*', font=label_font)
+        self.password_entry.grid(row=1, column=1, padx=5, pady=5)
+
+        login_button = tk.Button(self.login_root, text="登录", command=self.login, bg="#4CAF50", fg="white", font=label_font)
+        login_button.grid(row=2, column=1, padx=5, pady=10)
+
+    def login(self):
+        username = self.username_entry.get()
+        password = self.password_entry.get()
+        if username == '123456' and password == '123456':
+            self.login_root.destroy()
+            self.open_main_app()
+        else:
+            messagebox.showerror("错误", "用户名或密码错误！")
+
+    def open_main_app(self):
+        root = tk.Tk()
+        app = PersonalAccountingApp(root)
+        root.mainloop()
 
 class PersonalAccountingApp:
     def __init__(self, root):
         self.root = root
         self.root.title("个人记账本")
-        self.root.geometry("500x400")  # 增加窗口尺寸
-        self.root.configure(bg='#f0f8ff')  # 设置背景色
+        self.root.geometry("700x400")
+        self.root.configure(bg='#f0f8ff')
 
         # 设置字体
         title_font = font.Font(family='Arial', size=16, weight='bold')
@@ -86,12 +126,12 @@ class PersonalAccountingApp:
                 tk.Label(view_window, text=record_text, bg='#f0f8ff').pack()
 
     def show_statistics(self):
-        """显示统计信息."""
+        """显示统计信息和可视化图表."""
         total_income, total_expense, income_categories, expense_categories = calculate_statistics()
-        
+
         stats_window = tk.Toplevel()
         stats_window.title("统计信息")
-        stats_window.geometry("500x400")
+        stats_window.geometry("1000x600")
         stats_window.configure(bg='#f0f8ff')
 
         tk.Label(stats_window, text=f"总收入: {total_income}", font=('Arial', 14), bg='#f0f8ff').pack(pady=10)
@@ -105,7 +145,34 @@ class PersonalAccountingApp:
         for category, amount in expense_categories.items():
             tk.Label(stats_window, text=f"  {category}: {amount}", bg='#f0f8ff').pack()
 
+        # 创建三个子图用于三个饼图
+        fig, axs = plt.subplots(1, 3, figsize=(15, 5))
+
+        # 绘制收入类别饼图
+        if income_categories:
+            labels = list(income_categories.keys())
+            sizes = list(income_categories.values())
+            axs[0].pie(sizes, labels=labels, autopct='%1.1f%%', startangle=90)
+            axs[0].set_title('各类收入占比')
+
+        # 绘制支出类别饼图
+        if expense_categories:
+            labels = list(expense_categories.keys())
+            sizes = list(expense_categories.values())
+            axs[1].pie(sizes, labels=labels, autopct='%1.1f%%', startangle=90)
+            axs[1].set_title('各类支出占比')
+
+        # 绘制收入和支出占比饼图
+        if total_income > 0 or total_expense > 0:
+            sizes = [total_income, total_expense]
+            labels = ['收入', '支出']
+            axs[2].pie(sizes, labels=labels, autopct='%1.1f%%', startangle=90)
+            axs[2].set_title('收入和支出占比')
+
+        canvas = FigureCanvasTkAgg(fig, master=stats_window)
+        canvas.draw()
+        canvas.get_tk_widget().pack(pady=20)
+
 if __name__ == "__main__":
-    root = tk.Tk()
-    app = PersonalAccountingApp(root)
-    root.mainloop()
+    login_window = LoginWindow()
+    login_window.login_root.mainloop()
