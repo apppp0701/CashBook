@@ -199,6 +199,7 @@ class PersonalAccountingApp:
         login_button = tk.Button(login_window, text="登录", command=login, bg="#4CAF50", fg="white", font=label_font, width=20)
         login_button.pack(pady=10)
 
+
 if __name__ == "__main__":
     root = tk.Tk()
     app = PersonalAccountingApp(root)

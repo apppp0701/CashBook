@@ -33,3 +33,26 @@ def add_record(date, amount, category, note):
     
     # 保存所有记录
     save_records(records)
+
+
+def delete_record(date=None, amount=None, category=None, note=None):
+    """删除符合条件的记账记录，并返回删除操作是否成功."""
+    records = load_records()
+
+    # 定义删除前的记录数量
+    initial_count = len(records)
+
+    # 根据提供的参数过滤记录
+    records = [record for record in records if not (
+            (date is None or record['date'] == date) and
+            (amount is None or record['amount'] == amount) and
+            (category is None or record['category'] == category) and
+            (note is None or record['note'] == note)
+    )]
+
+    # 如果记录被删除，保存修改后的记录列表
+    if len(records) < initial_count:
+        save_records(records)
+        return True  # 返回删除成功
+    else:
+        return False  # 返回未找到记录
